@@ -11,87 +11,66 @@ struct TaskRow: View {
     @ObservedObject var task: Task
     
     var body: some View {
-            HStack(spacing: 15) {
-                
-                VStack(alignment: .leading, spacing: 8) {
-                    // Title and Priority with status effect
-                    HStack(alignment: .top) {
-                        Text(task.taskTitle ?? "Untitled")
-                            .font(.headline)
-                            .foregroundColor(task.isCompleted ? .gray : .primary)
-                            .strikethrough(task.isCompleted)
-                            .opacity(task.isCompleted ? 0.7 : 1.0)
-                            .lineLimit(2)
-                        
-                        Spacer()
-                        
-                        if task.isCompleted {
-                            Text("DONE!")
-                                .font(.caption2)
-                                .fontWeight(.bold)
-                                .foregroundColor(.white)
-                                .padding(.horizontal, 8)
-                                .padding(.vertical, 4)
-                                .background(Color.green)
-                                .clipShape(Capsule())
-                        } else {
-                            // Priority Badge
-                            Text(priorityString(for: task.taskPriority))
-                                .font(.caption2)
-                                .fontWeight(.medium)
-                                .padding(.horizontal, 8)
-                                .padding(.vertical, 4)
-                                .background(priorityColor(for: task.taskPriority).opacity(0.2))
-                                .foregroundColor(priorityColor(for: task.taskPriority))
-                                .clipShape(Capsule())
-                        }
-                    }
-                    
-                    // Description if available
-                    if let description = task.taskDescription, !description.isEmpty {
-                        Text(description)
-                            .font(.subheadline)
-                            .foregroundColor(task.isCompleted ? .gray.opacity(0.7) : .secondary)
-                            .lineLimit(2)
-                    }
-                    
-                    // Due date with icon
-                    HStack {
-                        Image(systemName: task.isCompleted ? "checkmark.circle.fill" : "calendar")
-                            .font(.caption)
-                            .foregroundColor(task.isCompleted ? .green : .gray)
-                        
-                        Text(task.taskDueDate ?? Date(), style: .date)
-                            .font(.caption)
-                        
-                        if !task.isCompleted && isOverdue(task.taskDueDate) {
-                            Text("OVERDUE")
-                                .font(.caption2)
-                                .fontWeight(.bold)
-                                .foregroundColor(.white)
-                                .padding(.horizontal, 6)
-                                .padding(.vertical, 2)
-                                .background(Color.red)
-                                .clipShape(Capsule())
-                        }
-                    }
-                    .foregroundColor(task.isCompleted ? .gray : .gray)
-                }
+        VStack(alignment: .leading, spacing: 8) {
+            // Title with strike-through if completed
+            Text(task.taskTitle ?? "Untitled")
+                .font(.title3)
+                .fontWeight(.medium)
+                .lineLimit(1)
+                .foregroundColor(.primary)
+                .strikethrough(task.isCompleted)
+                .padding(.bottom, 2)
+            
+            // Description with strike-through if completed
+            if let description = task.taskDescription, !description.isEmpty {
+                Text(description)
+                    .font(.subheadline)
+                    .foregroundColor(.secondary)
+                    .lineLimit(1)
+                    .strikethrough(task.isCompleted)
+                    .padding(.bottom, 2)
             }
-            .padding(.vertical, 8)
-            .padding(.horizontal, 5)
-            .opacity(task.isCompleted ? 0.7 : 1.0)
-
+            
+            // Tags and Date Row combined
+            HStack {
+                // Priority Tag
+                Text(priorityString(for: task.taskPriority))
+                    .font(.caption)
+                    .padding(.horizontal, 10)
+                    .padding(.vertical, 4)
+                    .background(priorityColor(for: task.taskPriority).opacity(0.15))
+                    .foregroundColor(priorityColor(for: task.taskPriority))
+                    .clipShape(Capsule())
+                
+                Spacer()
+                
+                // Date
+                HStack(spacing: 4) {
+                    Image(systemName: "calendar")
+                        .font(.caption)
+                    Text(task.taskDueDate?.formatted(date: .numeric, time: .omitted) ?? "No date")
+                        .font(.caption)
+                }
+                .foregroundColor(.gray)
+            }
         }
+        .padding(12)
+        .background(Color.white)
+        .clipShape(RoundedRectangle(cornerRadius: 12))
+        .shadow(color: Color.black.opacity(0.09), radius: 8, x: 0, y: 2)
+        .padding(.horizontal, 2)
+        .padding(.vertical, 2)
+        .opacity(task.isCompleted ? 0.6 : 1.0)
+    }
     
     // Helper function for priority colors
-       private func priorityColor(for priority: Int16) -> Color {
-           switch priority {
-           case 2: return .red   // High
-           case 1: return .orange // Medium
-           default: return .green // Low
-           }
-       }
+    private func priorityColor(for priority: Int16) -> Color {
+        switch priority {
+        case 2: return .red   // High
+        case 1: return .orange // Medium
+        default: return .green // Low
+        }
+    }
     
     // Helper function to check if task is overdue
     private func isOverdue(_ date: Date?) -> Bool {
@@ -100,22 +79,24 @@ struct TaskRow: View {
     }
     
     // Helper function for priority strings
-        private func priorityString(for priority: Int16) -> String {
-            switch priority {
-            case 2: return "High"
-            case 1: return "Medium"
-            default: return "Low"
-            }
+    private func priorityString(for priority: Int16) -> String {
+        switch priority {
+        case 2: return "High"
+        case 1: return "Medium"
+        default: return "Low"
         }
+    }
 }
 
-
-#Preview {
-    let context = PersistenceController.preview.container.viewContext
-    let sampleTask = Task(context: context)
-    sampleTask.taskTitle = "Sample Task"
-    sampleTask.taskDueDate = Date()
-    sampleTask.taskDescription = "This is a sample task description."
-    sampleTask.isCompleted = false
-    return TaskRow(task: sampleTask).environment(\.managedObjectContext, context)
+// Preview
+struct TaskRow_Previews: PreviewProvider {
+    static var previews: some View {
+        let context = PersistenceController.preview.container.viewContext
+        let sampleTask = Task(context: context)
+        sampleTask.taskTitle = "Sample Task"
+        sampleTask.taskDueDate = Date()
+        sampleTask.taskDescription = "This is a sample task description."
+        sampleTask.isCompleted = false
+        return TaskRow(task: sampleTask).environment(\.managedObjectContext, context)
+    }
 }
