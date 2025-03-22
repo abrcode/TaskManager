@@ -48,6 +48,9 @@ struct ContentView: View {
     @Namespace private var animation
     @State private var reorderingTasks = false
     
+    // Add this property to track edit mode
+     @State private var isEditMode = false
+    
     // FetchRequest setup
     @FetchRequest private var tasks: FetchedResults<Task>
     
@@ -156,20 +159,24 @@ struct ContentView: View {
                                                             .padding(EdgeInsets(top: 6, leading: 12, bottom: 6, trailing: 12))
                                 )
                                 .swipeActions(edge: .trailing, allowsFullSwipe: false) {
-                                    Button(role: .destructive) {
-                                        deleteTask(task)
-                                    } label: {
-                                        Label("Delete", systemImage: "trash")
-                                    }
-                                    
-                                    Button {
-                                        selectedTask = task
-                                        showingAddTask = true
-                                    } label: {
-                                        Label("Edit", systemImage: "pencil")
-                                    }
-                                    .tint(.orange)
-                                }
+                                                Button(role: .destructive) {
+                                                    deleteTask(task)
+                                                } label: {
+                                                    Label("Delete", systemImage: "trash")
+                                                }
+                                                
+                                                Button {
+                                                    // First set the task, then show sheet
+                                                    selectedTask = task
+                                                    isEditMode = true
+                                                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
+                                                        showingAddTask = true
+                                                    }
+                                                } label: {
+                                                    Label("Edit", systemImage: "pencil")
+                                                }
+                                                .tint(.orange)
+                                            }
                                 .swipeActions(edge: .leading, allowsFullSwipe: true) {
                                     Button {
                                         toggleTaskCompletion(task)
@@ -180,7 +187,9 @@ struct ContentView: View {
                                     .tint(task.isCompleted ? .red : .green)
                                 }
                                 .onTapGesture {
-                                    selectedTask = task
+                                    if !isEditMode {
+                                                       selectedTask = task
+                                                   }
                                 }
                         }
                         .onMove(perform: moveItems) // Add this modifier
@@ -196,13 +205,26 @@ struct ContentView: View {
                 // Add Task Button
                 AddTaskButton(showingAddTask: $showingAddTask)
             }
-            .navigationBarHidden(true)
-            .navigationDestination(item: $selectedTask) { task in
-                TaskDetailView(task: task)
-            }
-            .sheet(isPresented: $showingAddTask) {
-                AddEditTaskView(task: selectedTask)
-            }
+            .sheet(isPresented: $showingAddTask, onDismiss: {
+                            if isEditMode {
+                                isEditMode = false
+                                selectedTask = nil
+                            }
+                        }) {
+                            if let task = selectedTask {
+                                AddEditTaskView(task: task)
+                            } else {
+                                AddEditTaskView(task: nil)
+                            }
+                        }
+                        .navigationDestination(isPresented: Binding(
+                            get: { selectedTask != nil && !isEditMode },
+                            set: { if !$0 { selectedTask = nil } }
+                        )) {
+                            if let task = selectedTask {
+                                TaskDetailView(task: task)
+                            }
+                        }
         }
     }
     
