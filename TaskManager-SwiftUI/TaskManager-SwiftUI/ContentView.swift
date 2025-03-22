@@ -152,12 +152,9 @@ struct ContentView: View {
                         ForEach(filteredTasks) { task in
                             TaskRow(task: task)
                                 .listRowInsets(EdgeInsets(top: 8, leading: 16, bottom: 8, trailing: 16))
-                                .listRowBackground(
-                                    RoundedRectangle(cornerRadius: 15)
-                                                            .fill(Color(UIColor.systemBackground))
-                                                            .shadow(color: Color.black.opacity(0.08), radius: 8, x: 0, y: 4)
-                                                            .padding(EdgeInsets(top: 6, leading: 12, bottom: 6, trailing: 12))
-                                )
+                                                                .listRowSeparator(.hidden)
+                                                                .listRowBackground(Color.clear)
+
                                 .swipeActions(edge: .trailing, allowsFullSwipe: false) {
                                                 Button(role: .destructive) {
                                                     deleteTask(task)
