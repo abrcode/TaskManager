@@ -61,12 +61,12 @@ struct TaskDetailView: View {
 //                VStack(alignment: .leading, spacing: 12) {
 //                    Text("Status")
 //                        .font(.headline)
-//                    
+//
 //                    HStack {
 //                        Image(systemName: task.isCompleted ? "checkmark.circle.fill" : "circle")
 //                            .foregroundColor(task.isCompleted ? .green : .gray)
 //                            .font(.title2)
-//                        
+//
 //                        Text(task.isCompleted ? "Completed" : "In Progress")
 //                            .font(.body)
 //                            .foregroundColor(.secondary)
@@ -86,16 +86,26 @@ struct TaskDetailView: View {
                     }
                     .frame(maxWidth: .infinity)
                     .padding()
-                    .background(task.isCompleted ? Color.red : Color.green)
+                    .background(
+                        LinearGradient(gradient: Gradient(colors: [
+                            task.isCompleted ? .red : .green,
+                            task.isCompleted ? .pink : .mint
+                        ]),
+                        startPoint: .leading,
+                        endPoint: .trailing)
+                    )
                     .foregroundColor(.white)
                     .cornerRadius(15)
-                    .shadow(color: Color.black.opacity(0.09), radius: 8, x: 0, y: 2)
+                    .shadow(color: (task.isCompleted ? Color.red : Color.green).opacity(0.3),
+                            radius: 8, x: 0, y: 4)
                 }
                 .padding(.top)
             }
             .padding()
         }
-        .background(Color(UIColor.systemGroupedBackground))
+        .background( LinearGradient(gradient: Gradient(colors: [Color.blue.opacity(0.1), Color.purple.opacity(0.1)]),
+                                    startPoint: .topLeading,
+                                    endPoint: .bottomTrailing))
         .navigationTitle("Task Details")
         .navigationBarTitleDisplayMode(.inline)
     }

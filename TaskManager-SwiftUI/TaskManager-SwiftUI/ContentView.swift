@@ -111,6 +111,12 @@ struct ContentView: View {
     var body: some View {
         NavigationStack {
             ZStack {
+                // Add gradient background
+                LinearGradient(gradient: Gradient(colors: [Color.blue.opacity(0.1), Color.purple.opacity(0.1)]),
+                              startPoint: .topLeading,
+                              endPoint: .bottomTrailing)
+                    .ignoresSafeArea()
+
                 VStack(spacing: 0) {
                     // Header
                                         VStack(spacing: 15) {
@@ -128,7 +134,9 @@ struct ContentView: View {
                                         .frame(maxWidth: .infinity)
                                         .padding(.horizontal)
                                         .padding(.bottom, 10) // Add this padding
-                                        .background(Color(UIColor.systemBackground))
+                                        .background( LinearGradient(gradient: Gradient(colors: [Color.blue.opacity(0.1), Color.purple.opacity(0.1)]),
+                                                                    startPoint: .topLeading,
+                                                                    endPoint: .bottomTrailing))
                     
                     // Filter and Sort Controls
                     VStack(spacing: 15) {
@@ -145,7 +153,17 @@ struct ContentView: View {
                             .padding(.horizontal)
                     }
                     .padding(.vertical, 10)
-                    .background(Color(UIColor.systemBackground))
+                    .background( LinearGradient(gradient: Gradient(colors: [Color.blue.opacity(0.1), Color.purple.opacity(0.1)]),
+                                                startPoint: .topLeading,
+                                                endPoint: .bottomTrailing))
+                    
+                    Divider()
+                        .frame(height: 1.5)
+                        .overlay(Color.gray.opacity(0.3))
+                        .padding(.vertical, 8)
+                        .background(LinearGradient(gradient: Gradient(colors: [Color.blue.opacity(0.1), Color.purple.opacity(0.1)]),
+                                                  startPoint: .topLeading,
+                                                  endPoint: .bottomTrailing))
                     
                     // Task List
                     List {
@@ -181,7 +199,9 @@ struct ContentView: View {
                                         Label(task.isCompleted ? "Mark Incomplete" : "Mark Complete",
                                               systemImage: task.isCompleted ? "xmark.circle" : "checkmark.circle")
                                     }
-                                    .tint(task.isCompleted ? .red : .green)
+                                    .tint(task.isCompleted ?
+                                          Color(uiColor: UIColor(gradient: [.systemRed, .systemPink])) :
+                                          Color(uiColor: UIColor(gradient: [.systemGreen, .systemMint])))
                                 }
                                 .onTapGesture {
                                     if !isEditMode {
@@ -194,12 +214,14 @@ struct ContentView: View {
                     }
                     .padding(.top, 15)
                     .listStyle(.plain)
-                    .background(Color(UIColor.systemGroupedBackground))
+                    .background( LinearGradient(gradient: Gradient(colors: [Color.blue.opacity(0.1), Color.purple.opacity(0.1)]),
+                                                startPoint: .topLeading,
+                                                endPoint: .bottomTrailing))
                     .environment(\.editMode, .constant(reorderingTasks ? EditMode.active : EditMode.inactive))
 
                 }
                 
-                // Add Task Button
+                // Update Add Task Button with gradient
                 AddTaskButton(showingAddTask: $showingAddTask)
             }
             .sheet(isPresented: $showingAddTask, onDismiss: {
@@ -291,7 +313,11 @@ struct FilterSegmentedControl: View {
                     .background {
                         if selectedFilter == filter {
                             Capsule()
-                                .fill(Color.blue)
+                                .fill(
+                                    LinearGradient(gradient: Gradient(colors: [.blue, .purple]),
+                                                  startPoint: .leading,
+                                                  endPoint: .trailing)
+                                )
                                 .matchedGeometryEffect(id: "FILTER", in: animation)
                         }
                     }
@@ -371,9 +397,13 @@ struct AddTaskButton: View {
                         .fontWeight(.semibold)
                         .foregroundColor(.white)
                         .frame(width: 56, height: 56)
-                        .background(Color.blue)
+                        .background(
+                            LinearGradient(gradient: Gradient(colors: [.blue, .purple]),
+                                          startPoint: .leading,
+                                          endPoint: .trailing)
+                        )
                         .clipShape(Circle())
-                        .shadow(radius: 4)
+                        .shadow(color: Color.blue.opacity(0.3), radius: 10, x: 0, y: 5)
                 }
                 .padding(.trailing, 20)
                 .padding(.bottom, 20)
@@ -407,5 +437,26 @@ struct CircularProgressRing: View {
                 .fontWeight(.medium)
         }
         .frame(width: size, height: size)
+    }
+}
+
+extension UIColor {
+    convenience init(gradient colors: [UIColor]) {
+        let gradientColors = colors.map { $0.cgColor }
+        let gradient = CGGradient(colorsSpace: nil,
+                                 colors: gradientColors as CFArray,
+                                 locations: nil)!
+        
+        let bounds = CGRect(x: 0, y: 0, width: 1, height: 1)
+        UIGraphicsBeginImageContextWithOptions(bounds.size, true, 0)
+        let context = UIGraphicsGetCurrentContext()!
+        context.drawLinearGradient(gradient,
+                                  start: CGPoint(x: 0, y: 0),
+                                  end: CGPoint(x: 1, y: 0),
+                                  options: [])
+        let gradientImage = UIGraphicsGetImageFromCurrentImageContext()
+        UIGraphicsEndImageContext()
+        
+        self.init(patternImage: gradientImage!)
     }
 }
