@@ -23,6 +23,7 @@ class TaskViewModel : ObservableObject {
     
     // MARK: - Editing Existing Core Data
     @Published var editTask: Task?
+    @Published var taskDisplayOrder: Int16 = 0
     
     
     // MARK: - For Add and Update Task
@@ -32,8 +33,19 @@ class TaskViewModel : ObservableObject {
         
         if let editTask = editTask {
             task = editTask
+            // Preserve existing display order for edits
+                      taskDisplayOrder = editTask.displayOrder
+
         }else{
             task = Task(context: context)
+            // For new tasks, get the highest display order and add 1
+                        let fetchRequest: NSFetchRequest<Task> = Task.fetchRequest()
+                        fetchRequest.sortDescriptors = [NSSortDescriptor(key: "displayOrder", ascending: false)]
+                        fetchRequest.fetchLimit = 1
+                        
+                        if let lastTask = try? context.fetch(fetchRequest).first {
+                            taskDisplayOrder = lastTask.displayOrder + 1
+                        }
         }
         task.taskTitle = taskTitle
         task.taskDescription = taskDescription
@@ -55,6 +67,8 @@ class TaskViewModel : ObservableObject {
         taskTitle = ""
         taskDescription = ""
         taskDueDate = Date()
+        taskDisplayOrder = 0  // Reset display order
+
     }
     
     // MARK: - If Edit task exist
@@ -64,6 +78,8 @@ class TaskViewModel : ObservableObject {
             taskDescription = editTask.taskDescription ?? ""
             taskPriority = editTask.taskPriority
             taskDueDate = editTask.taskDueDate ?? Date()
+            taskDisplayOrder = editTask.displayOrder  // Preserve display order
+
         }
     }
     

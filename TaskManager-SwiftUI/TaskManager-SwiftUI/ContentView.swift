@@ -36,250 +36,205 @@ enum TaskPriority: Int, CaseIterable {
 }
 
 
-
-
 struct ContentView: View {
-    
     @Environment(\.managedObjectContext) private var viewContext
     
-    // Update FetchRequest to use dynamic sort descriptors
+    // State variables
     @State private var sortOption: SortOption = .dueDate
     @State private var sortAscending = true
+    @State private var selectedTask: Task? = nil
+    @State private var showingAddTask = false
+    @State private var selectedFilter: TaskFilter = .all
+    @Namespace private var animation
+    @State private var reorderingTasks = false
     
-    private var sortDescriptors: [NSSortDescriptor] {
-        switch sortOption {
-        case .dueDate:
-            return [NSSortDescriptor(key: "taskDueDate", ascending: sortAscending)]
-            
-        case .priority:
-            return [NSSortDescriptor(key: "taskPriority", ascending: sortAscending)]
-            
-        case .alphabetical:
-            return [NSSortDescriptor(key: "taskTitle", ascending: sortAscending)]
-        }
-    }
-
-
-
-    
+    // FetchRequest setup
     @FetchRequest private var tasks: FetchedResults<Task>
     
-       
-       @State private var showingAddTask = false
-       @State private var selectedFilter: TaskFilter = .all
-       @Namespace private var animation
-    
-    init() {
+    // Update the fetch request in init() to include displayOrder
+        init() {
             let request = FetchRequest<Task>(
-                sortDescriptors: [NSSortDescriptor(keyPath: \Task.taskDueDate, ascending: true)],
+                sortDescriptors: [
+                    NSSortDescriptor(keyPath: \Task.displayOrder, ascending: true),
+                    NSSortDescriptor(keyPath: \Task.taskDueDate, ascending: true)
+                ],
                 animation: .default
             )
             self._tasks = request
         }
-       
-       var filteredTasks: [Task] {
-           switch selectedFilter {
-           case .all:
-               return Array(tasks)
-           case .pending:
-               return tasks.filter { !$0.isCompleted }
-           case .completed:
-               return tasks.filter { $0.isCompleted }
-           }
-       }
     
+    // Update your sortDescriptors computed property
+        private var sortDescriptors: [NSSortDescriptor] {
+            if reorderingTasks {
+                return [NSSortDescriptor(key: "displayOrder", ascending: true)]
+            }
+            
+            switch sortOption {
+            case .dueDate:
+                return [NSSortDescriptor(key: "taskDueDate", ascending: sortAscending)]
+            case .priority:
+                return [NSSortDescriptor(key: "taskPriority", ascending: sortAscending)]
+            case .alphabetical:
+                return [NSSortDescriptor(key: "taskTitle", ascending: sortAscending)]
+            }
+        }
     
-    // Add computed property for progress
-       private var completionProgress: Double {
-           let totalTasks = tasks.count
-           guard totalTasks > 0 else { return 0 }
-           let completedTasks = tasks.filter { $0.isCompleted }.count
-           return Double(completedTasks) / Double(totalTasks)
-       }
-       
-       var body: some View {
-           NavigationStack {
-               ZStack {
-                   
-                   VStack(spacing: 10) {
-                       
-                     // Custom Header Section
-                      VStack(spacing: 15) {
-                          HStack(spacing: 25) {
-                              Text("Task Manager")
-                                  .font(.system(size: 38, weight: .bold))
-                                  .foregroundColor(.primary)
-                              
-                              CircularProgressRing(progress: completionProgress, size: 65)
-                                  .animation(.spring(response: 0.6), value: completionProgress)
-                                  .padding(10)
-                          }
-                          .padding(.top, 15)
-
-                      }
-                      .frame(maxWidth: .infinity)
-                      .padding(.horizontal)
-                      .background(Color(UIColor.systemGroupedBackground))
-                       
-                       //ScrollView Content
-                       ScrollView {
+    var filteredTasks: [Task] {
+        switch selectedFilter {
+        case .all: return Array(tasks)
+        case .pending: return tasks.filter { !$0.isCompleted }
+        case .completed: return tasks.filter { $0.isCompleted }
+        }
+    }
+    
+    // Add this function to update sort when edit mode changes
+        private func updateEditMode(isEditing: Bool) {
+            withAnimation {
+                reorderingTasks = isEditing
+                if !isEditing {
+                    // Reset to normal sort when exiting edit mode
+                    updateSortDescriptors()
+                }
+            }
+        }
+    
+    private var completionProgress: Double {
+        let totalTasks = tasks.count
+        guard totalTasks > 0 else { return 0 }
+        let completedTasks = tasks.filter { $0.isCompleted }.count
+        return Double(completedTasks) / Double(totalTasks)
+    }
+    
+    var body: some View {
+        NavigationStack {
+            ZStack {
+                VStack(spacing: 0) {
+                    // Header
+                                        VStack(spacing: 15) {
+                                            HStack(spacing: 25) {
+                                                Text("Task Manager")
+                                                    .font(.system(size: 38, weight: .bold))
+                                                    .foregroundColor(.primary)
+                                                
+                                                CircularProgressRing(progress: completionProgress, size: 50)
+                                                    .animation(.spring(response: 0.6), value: completionProgress)
+                                                    .padding(.vertical, 8) // Add this padding
+                                            }
+                                            .padding(.top, 15)
+                                        }
+                                        .frame(maxWidth: .infinity)
+                                        .padding(.horizontal)
+                                        .padding(.bottom, 10) // Add this padding
+                                        .background(Color(UIColor.systemBackground))
+                    
+                    // Filter and Sort Controls
+                    VStack(spacing: 15) {
+                        HStack(spacing: 10) {
+                            FilterSegmentedControl(selectedFilter: $selectedFilter, animation: animation)
                             
-                           VStack(spacing: 20) {
-                               HStack {
-                                   
-                                   // Custom Segmented Control
-                                   HStack(spacing: 10) {
-                                       ForEach(TaskFilter.allCases, id: \.self) { filter in
-                                           Text(filter.rawValue)
-                                               .font(.callout)
-                                               .fontWeight(.semibold)
-                                               .foregroundColor(selectedFilter == filter ? .white : .primary)
-                                               .padding(.vertical, 8)
-                                               .frame(maxWidth: .infinity)
-                                               .background {
-                                                   if selectedFilter == filter {
-                                                       Capsule()
-                                                           .fill(Color.blue)
-                                                           .matchedGeometryEffect(id: "FILTER", in: animation)
-                                                   }
-                                               }
-                                               .onTapGesture {
-                                                   withAnimation(.spring()) {
-                                                       selectedFilter = filter
-                                                   }
-                                               }
-                                       }
-                                   }
-                                   // Sort Menu Button
-                                   Menu {
-                                       ForEach(SortOption.allCases, id: \.self) { option in
-                                           Button {
-                                               if sortOption == option {
-                                                   sortAscending.toggle()
-                                               } else {
-                                                   sortOption = option
-                                                   sortAscending = true
-                                               }
-                                               updateSortDescriptors()
-                                           } label: {
-                                               HStack {
-                                                   Text(option.rawValue)
-                                                   if sortOption == option {
-                                                       Image(systemName: sortAscending ? "arrow.up" : "arrow.down")
-                                                   }
-                                               }
-                                           }
-                                       }
-                                   } label: {
-                                       Image(systemName: "line.3.horizontal.decrease.circle")
-                                           .font(.title3)
-                                           .foregroundColor(.blue)
-                                           .frame(width: 45, height: 45)
-                                           .background(Color.blue.opacity(0.1))
-                                           .clipShape(Circle())
-                                   }
-                                   .padding(.leading, 8)
-                                   
-                               }
-                               .padding(.horizontal)
-                               
-                               // Current sort indicator
-                               HStack {
-                                   Image(systemName: "arrow.up.arrow.down")
-                                       .foregroundColor(.secondary)
-                                   Text("Sorted by: \(sortOption.rawValue) (\(sortAscending ? "ascending" : "descending"))")
-                                       .font(.caption)
-                                       .foregroundColor(.secondary)
-                                   Spacer()
-                               }
-                               .padding(.horizontal)
-                               .padding(.top, -10)
-                               
-                               // Tasks List
-                               LazyVStack(spacing: 20) {
-                                   ForEach(filteredTasks) { task in
-                                       NavigationLink(destination: TaskDetailView(task: task)) {
-                                           TaskRow(task: task)
-                                       }
-                                       .buttonStyle(PlainButtonStyle())
-                                       .padding()
-                                       .background(Color(UIColor.systemBackground))
-                                       .cornerRadius(12)
-                                       .shadow(color: Color.black.opacity(0.1), radius: 5, x: 0, y: 2)
-                                       // Add swipe actions
-                                       .swipeActions(edge: .trailing, allowsFullSwipe: false) {
-                                           // Delete button
-                                           Button(role: .destructive) {
-                                               deleteTask(task)
-                                           } label: {
-                                               Label("Delete", systemImage: "trash")
-                                           }
-                                           
-                                           // Edit button
-                                           Button {
-                                               // Handle edit action
-                                               showingAddTask = true
-                                               // You'll need to modify AddEditTaskView to handle editing
-                                           } label: {
-                                               Label("Edit", systemImage: "pencil")
-                                           }
-                                           .tint(.orange)
-                                       }
-                                       .swipeActions(edge: .leading, allowsFullSwipe: true) {
-                                           // Toggle completion button
-                                           Button {
-                                               toggleTaskCompletion(task)
-                                           } label: {
-                                               Label(task.isCompleted ? "Mark Incomplete" : "Mark Complete",
-                                                     systemImage: task.isCompleted ? "xmark.circle" : "checkmark.circle")
-                                           }
-                                           .tint(task.isCompleted ? .red : .green)
-                                       }
-                                   }
-                               }
-                               .padding(.horizontal)
-                           }
-                           .padding(.vertical)
-                       }
-                       .background(Color(UIColor.systemGroupedBackground))
-                       
-                   }
+                            SortMenuButton(sortOption: $sortOption, sortAscending: $sortAscending) {
+                                updateSortDescriptors()
+                            }
+                        }
+                        .padding(.horizontal)
+                        
+                        SortIndicator(sortOption: sortOption, sortAscending: sortAscending)
+                            .padding(.horizontal)
+                    }
+                    .padding(.vertical, 10)
+                    .background(Color(UIColor.systemBackground))
+                    
+                    // Task List
+                    List {
+                        ForEach(filteredTasks) { task in
+                            TaskRow(task: task)
+                                .listRowInsets(EdgeInsets(top: 8, leading: 16, bottom: 8, trailing: 16))
+                                .listRowBackground(
+                                    RoundedRectangle(cornerRadius: 15)
+                                                            .fill(Color(UIColor.systemBackground))
+                                                            .shadow(color: Color.black.opacity(0.08), radius: 8, x: 0, y: 4)
+                                                            .padding(EdgeInsets(top: 6, leading: 12, bottom: 6, trailing: 12))
+                                )
+                                .swipeActions(edge: .trailing, allowsFullSwipe: false) {
+                                    Button(role: .destructive) {
+                                        deleteTask(task)
+                                    } label: {
+                                        Label("Delete", systemImage: "trash")
+                                    }
+                                    
+                                    Button {
+                                        selectedTask = task
+                                        showingAddTask = true
+                                    } label: {
+                                        Label("Edit", systemImage: "pencil")
+                                    }
+                                    .tint(.orange)
+                                }
+                                .swipeActions(edge: .leading, allowsFullSwipe: true) {
+                                    Button {
+                                        toggleTaskCompletion(task)
+                                    } label: {
+                                        Label(task.isCompleted ? "Mark Incomplete" : "Mark Complete",
+                                              systemImage: task.isCompleted ? "xmark.circle" : "checkmark.circle")
+                                    }
+                                    .tint(task.isCompleted ? .red : .green)
+                                }
+                                .onTapGesture {
+                                    selectedTask = task
+                                }
+                        }
+                        .onMove(perform: moveItems) // Add this modifier
+                        .listRowSeparator(.hidden)
+                    }
+                    .padding(.top, 15)
+                    .listStyle(.plain)
+                    .background(Color(UIColor.systemGroupedBackground))
+                    .environment(\.editMode, .constant(reorderingTasks ? EditMode.active : EditMode.inactive))
+
+                }
                 
-                   // Floating Action Button
-                   VStack {
-                       Spacer()
-                       HStack {
-                           Spacer()
-                           Button(action: { showingAddTask = true }) {
-                               Image(systemName: "plus")
-                                   .font(.title2)
-                                   .fontWeight(.semibold)
-                                   .foregroundColor(.white)
-                                   .frame(width: 56, height: 56)
-                                   .background(Color.blue)
-                                   .clipShape(Circle())
-                                   .shadow(radius: 4)
-                           }
-                           .padding(.trailing, 20)
-                           .padding(.bottom, 20)
-                       }
-                   }
-               }
-               .navigationBarTitleDisplayMode(.inline)
-               .sheet(isPresented: $showingAddTask) {
-                   AddEditTaskView()
-               }
-           }
-       }
+                // Add Task Button
+                AddTaskButton(showingAddTask: $showingAddTask)
+            }
+            .navigationBarHidden(true)
+            .navigationDestination(item: $selectedTask) { task in
+                TaskDetailView(task: task)
+            }
+            .sheet(isPresented: $showingAddTask) {
+                AddEditTaskView(task: selectedTask)
+            }
+        }
+    }
     
+    // Add this function to ContentView
+    private func moveItems(from source: IndexSet, to destination: Int) {
+        // Create a mutable array from filteredTasks
+        var items = filteredTasks
+        
+        // Perform the move
+        items.move(fromOffsets: source, toOffset: destination)
+        
+        // Update the order in Core Data
+        for (index, task) in items.enumerated() {
+            task.displayOrder = Int16(index)
+        }
+        
+        // Save the context
+        do {
+            try viewContext.save()
+        } catch {
+            print("Failed to save task order: \(error)")
+        }
+    }
+    
+    // MARK: - Helper Functions
     private func updateSortDescriptors() {
         tasks.nsSortDescriptors = sortDescriptors
     }
-
     
-    private func deleteTasks(offsets: IndexSet) {
+    private func deleteTask(_ task: Task) {
         withAnimation {
-            offsets.map { tasks[$0] }.forEach(viewContext.delete)
+            viewContext.delete(task)
             do {
                 try viewContext.save()
             } catch {
@@ -288,31 +243,125 @@ struct ContentView: View {
         }
     }
     
-    // Add these helper functions
-        private func deleteTask(_ task: Task) {
-            withAnimation {
-                viewContext.delete(task)
-                do {
-                    try viewContext.save()
-                } catch {
-                    print("Failed to delete task: \(error.localizedDescription)")
-                }
+    private func toggleTaskCompletion(_ task: Task) {
+        withAnimation {
+            task.isCompleted.toggle()
+            do {
+                try viewContext.save()
+            } catch {
+                print("Failed to update task: \(error.localizedDescription)")
             }
         }
-        
-        private func toggleTaskCompletion(_ task: Task) {
-            withAnimation {
-                task.isCompleted.toggle()
-                do {
-                    try viewContext.save()
-                } catch {
-                    print("Failed to update task: \(error.localizedDescription)")
-                }
-            }
-        }
+    }
 }
 
+// MARK: - Supporting Views
+struct FilterSegmentedControl: View {
+    @Binding var selectedFilter: TaskFilter
+    var animation: Namespace.ID
+    
+    var body: some View {
+        HStack(spacing: 10) {
+            ForEach(TaskFilter.allCases, id: \.self) { filter in
+                Text(filter.rawValue)
+                    .font(.callout)
+                    .fontWeight(.semibold)
+                    .foregroundColor(selectedFilter == filter ? .white : .primary)
+                    .padding(.vertical, 8)
+                    .frame(maxWidth: .infinity)
+                    .background {
+                        if selectedFilter == filter {
+                            Capsule()
+                                .fill(Color.blue)
+                                .matchedGeometryEffect(id: "FILTER", in: animation)
+                        }
+                    }
+                    .onTapGesture {
+                        withAnimation(.spring()) {
+                            selectedFilter = filter
+                        }
+                    }
+            }
+        }
+    }
+}
 
+struct SortMenuButton: View {
+    @Binding var sortOption: SortOption
+    @Binding var sortAscending: Bool
+    var onSort: () -> Void
+    
+    var body: some View {
+        Menu {
+            ForEach(SortOption.allCases, id: \.self) { option in
+                Button {
+                    if sortOption == option {
+                        sortAscending.toggle()
+                    } else {
+                        sortOption = option
+                        sortAscending = true
+                    }
+                    onSort()
+                } label: {
+                    HStack {
+                        Text(option.rawValue)
+                        if sortOption == option {
+                            Image(systemName: sortAscending ? "arrow.up" : "arrow.down")
+                        }
+                    }
+                }
+            }
+        } label: {
+            Image(systemName: "line.3.horizontal.decrease.circle")
+                .font(.title3)
+                .foregroundColor(.blue)
+                .frame(width: 45, height: 45)
+                .background(Color.blue.opacity(0.1))
+                .clipShape(Circle())
+        }
+    }
+}
+
+struct SortIndicator: View {
+    let sortOption: SortOption
+    let sortAscending: Bool
+    
+    var body: some View {
+        HStack {
+            Image(systemName: "arrow.up.arrow.down")
+                .foregroundColor(.secondary)
+            Text("Sorted by: \(sortOption.rawValue) (\(sortAscending ? "ascending" : "descending"))")
+                .font(.caption)
+                .foregroundColor(.secondary)
+            Spacer()
+        }
+    }
+}
+
+struct AddTaskButton: View {
+    @Binding var showingAddTask: Bool
+    
+    var body: some View {
+        VStack {
+            Spacer()
+            HStack {
+                Spacer()
+                Button(action: { showingAddTask = true }) {
+                    Image(systemName: "plus")
+                        .font(.title2)
+                        .fontWeight(.semibold)
+                        .foregroundColor(.white)
+                        .frame(width: 56, height: 56)
+                        .background(Color.blue)
+                        .clipShape(Circle())
+                        .shadow(radius: 4)
+                }
+                .padding(.trailing, 20)
+                .padding(.bottom, 20)
+            }
+        }
+    }
+}
 
 struct CircularProgressRing: View {
     let progress: Double
