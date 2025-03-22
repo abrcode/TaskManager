@@ -157,9 +157,41 @@ struct AddEditTaskView: View {
     @State private var dueDate = Date()
     @State private var showDatePicker = false
     
+    // Add task parameter for edit mode
+        var task: Task?
+    
     // Snackbar states
     @State private var showSnackbar = false
     @State private var snackbarMessage = ""
+    
+    // Add initializer to set up edit mode
+       init(task: Task? = nil) {
+           self.task = task
+           let initialTitle = task?.taskTitle ?? ""
+           let initialDescription = task?.taskDescription ?? ""
+           let initialDueDate = task?.taskDueDate ?? Date()
+           
+           // Convert priority number to string
+           let initialPriority: String = {
+               switch task?.taskPriority {
+               case 0: return "Low"
+               case 1: return "Medium"
+               case 2: return "High"
+               default: return "Low"
+               }
+           }()
+           
+           // Initialize state properties
+           _title = State(initialValue: initialTitle)
+           _description = State(initialValue: initialDescription)
+           _priority = State(initialValue: initialPriority)
+           _dueDate = State(initialValue: initialDueDate)
+       }
+    
+    // Update navigation title based on mode
+       private var navigationTitle: String {
+           task == nil ? "New Task" : "Edit Task"
+       }
     
     let priorities = ["Low", "Medium", "High"]
     
@@ -227,7 +259,7 @@ struct AddEditTaskView: View {
                         )
                     }
                 }
-                .navigationTitle("New Task")
+                .navigationTitle(navigationTitle)
                 .toolbar {
                     ToolbarItem(placement: .navigationBarLeading) {
                         Button("Cancel") {
@@ -258,30 +290,37 @@ struct AddEditTaskView: View {
         }
     }
     
-    private func saveTask() {
-        let task = Task(context: viewContext)
-        task.taskTitle = title.trimmingCharacters(in: .whitespacesAndNewlines)
-        task.taskDescription = description.trimmingCharacters(in: .whitespacesAndNewlines)
-        switch priority {
-        case "Low":
-            task.taskPriority = 0
-        case "Medium":
-            task.taskPriority = 1
-        case "High":
-            task.taskPriority = 2
-        default:
-            task.taskPriority = 0
+    // Update saveTask function to handle both new and edit modes
+        private func saveTask() {
+            let taskToSave: Task
+            
+            if let existingTask = task {
+                // Update existing task
+                taskToSave = existingTask
+            } else {
+                // Create new task
+                taskToSave = Task(context: viewContext)
+            }
+            
+            // Update task properties
+            taskToSave.taskTitle = title.trimmingCharacters(in: .whitespacesAndNewlines)
+            taskToSave.taskDescription = description.trimmingCharacters(in: .whitespacesAndNewlines)
+            switch priority {
+            case "Low": taskToSave.taskPriority = 0
+            case "Medium": taskToSave.taskPriority = 1
+            case "High": taskToSave.taskPriority = 2
+            default: taskToSave.taskPriority = 0
+            }
+            taskToSave.taskDueDate = dueDate
+            
+            do {
+                try viewContext.save()
+                dismiss()
+            } catch {
+                showError("Failed to save task: \(error.localizedDescription)")
+            }
         }
-        task.taskDueDate = dueDate
-        task.isCompleted = false
-        
-        do {
-            try viewContext.save()
-            dismiss()
-        } catch {
-            showError("Failed to save task: \(error.localizedDescription)")
-        }
-    }
+
 }
 
 // Preview remains the same
