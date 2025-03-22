@@ -111,38 +111,37 @@ struct ContentView: View {
     var body: some View {
         NavigationStack {
             ZStack {
-                // Add gradient background
+                // Background Gradient
                 LinearGradient(gradient: Gradient(colors: [Color.blue.opacity(0.1), Color.purple.opacity(0.1)]),
                               startPoint: .topLeading,
                               endPoint: .bottomTrailing)
                     .ignoresSafeArea()
-
+                
                 VStack(spacing: 0) {
                     // Header
-                                        VStack(spacing: 15) {
-                                            HStack(spacing: 25) {
-                                                Text("Task Manager")
-                                                    .font(.system(size: 38, weight: .bold))
-                                                    .foregroundColor(.primary)
-                                                
-                                                CircularProgressRing(progress: completionProgress, size: 50)
-                                                    .animation(.spring(response: 0.6), value: completionProgress)
-                                                    .padding(.vertical, 8) // Add this padding
-                                            }
-                                            .padding(.top, 15)
-                                        }
-                                        .frame(maxWidth: .infinity)
-                                        .padding(.horizontal)
-                                        .padding(.bottom, 10) // Add this padding
-                                        .background( LinearGradient(gradient: Gradient(colors: [Color.blue.opacity(0.1), Color.purple.opacity(0.1)]),
-                                                                    startPoint: .topLeading,
-                                                                    endPoint: .bottomTrailing))
+                    VStack(spacing: 15) {
+                        HStack(spacing: 25) {
+                            Text("Task Manager")
+                                .font(.system(size: 38, weight: .bold))
+                                .foregroundColor(.primary)
+                            
+                            CircularProgressRing(progress: completionProgress, size: 50)
+                                .animation(.spring(response: 0.6), value: completionProgress)
+                                .padding(.vertical, 8)
+                        }
+                        .padding(.top, 15)
+                    }
+                    .frame(maxWidth: .infinity)
+                    .padding(.horizontal)
+                    .padding(.bottom, 10)
+                    .background(LinearGradient(gradient: Gradient(colors: [Color.blue.opacity(0.1), Color.purple.opacity(0.1)]),
+                                              startPoint: .topLeading,
+                                              endPoint: .bottomTrailing))
                     
                     // Filter and Sort Controls
                     VStack(spacing: 15) {
                         HStack(spacing: 10) {
                             FilterSegmentedControl(selectedFilter: $selectedFilter, animation: animation)
-                            
                             SortMenuButton(sortOption: $sortOption, sortAscending: $sortAscending) {
                                 updateSortDescriptors()
                             }
@@ -153,10 +152,10 @@ struct ContentView: View {
                             .padding(.horizontal)
                     }
                     .padding(.vertical, 10)
-                    .background( LinearGradient(gradient: Gradient(colors: [Color.blue.opacity(0.1), Color.purple.opacity(0.1)]),
-                                                startPoint: .topLeading,
-                                                endPoint: .bottomTrailing))
-                    
+                    .background(LinearGradient(gradient: Gradient(colors: [Color.blue.opacity(0.1), Color.purple.opacity(0.1)]),
+                                               startPoint: .topLeading,
+                                               endPoint: .bottomTrailing))
+
                     Divider()
                         .frame(height: 1.5)
                         .overlay(Color.gray.opacity(0.3))
@@ -164,88 +163,92 @@ struct ContentView: View {
                         .background(LinearGradient(gradient: Gradient(colors: [Color.blue.opacity(0.1), Color.purple.opacity(0.1)]),
                                                   startPoint: .topLeading,
                                                   endPoint: .bottomTrailing))
-                    
-                    // Task List
-                    List {
-                        ForEach(filteredTasks) { task in
-                            TaskRow(task: task)
-                                .listRowInsets(EdgeInsets(top: 8, leading: 16, bottom: 8, trailing: 16))
-                                                                .listRowSeparator(.hidden)
-                                                                .listRowBackground(Color.clear)
 
-                                .swipeActions(edge: .trailing, allowsFullSwipe: false) {
-                                                Button(role: .destructive) {
-                                                    deleteTask(task)
-                                                } label: {
-                                                    Label("Delete", systemImage: "trash")
-                                                }
-                                                
-                                                Button {
-                                                    // First set the task, then show sheet
-                                                    selectedTask = task
-                                                    isEditMode = true
-                                                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
-                                                        showingAddTask = true
-                                                    }
-                                                } label: {
-                                                    Label("Edit", systemImage: "pencil")
-                                                }
-                                                .tint(.orange)
+                    // Check if filteredTasks is empty
+                    if filteredTasks.isEmpty {
+                        EmptyStateView(message: getEmptyStateMessage(), showingAddTask: $showingAddTask)
+                            .frame(maxWidth: .infinity, maxHeight: .infinity)
+                    } else {
+                        // Task List
+                        List {
+                            ForEach(filteredTasks) { task in
+                                TaskRow(task: task)
+                                    .listRowInsets(EdgeInsets(top: 8, leading: 16, bottom: 8, trailing: 16))
+                                    .listRowSeparator(.hidden)
+                                    .listRowBackground(Color.clear)
+                                    .swipeActions(edge: .trailing, allowsFullSwipe: false) {
+                                        Button(role: .destructive) {
+                                            deleteTask(task)
+                                        } label: {
+                                            Label("Delete", systemImage: "trash")
+                                        }
+                                        
+                                        Button {
+                                            selectedTask = task
+                                            isEditMode = true
+                                            DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
+                                                showingAddTask = true
                                             }
-                                .swipeActions(edge: .leading, allowsFullSwipe: true) {
-                                    Button {
-                                        toggleTaskCompletion(task)
-                                    } label: {
-                                        Label(task.isCompleted ? "Mark Incomplete" : "Mark Complete",
-                                              systemImage: task.isCompleted ? "xmark.circle" : "checkmark.circle")
+                                        } label: {
+                                            Label("Edit", systemImage: "pencil")
+                                        }
+                                        .tint(.orange)
                                     }
-                                    .tint(task.isCompleted ?
-                                          Color(uiColor: UIColor(gradient: [.systemRed, .systemPink])) :
-                                          Color(uiColor: UIColor(gradient: [.systemGreen, .systemMint])))
-                                }
-                                .onTapGesture {
-                                    if !isEditMode {
-                                                       selectedTask = task
-                                                   }
-                                }
+                                    .swipeActions(edge: .leading, allowsFullSwipe: true) {
+                                        Button {
+                                            toggleTaskCompletion(task)
+                                        } label: {
+                                            Label(task.isCompleted ? "Mark Incomplete" : "Mark Complete",
+                                                  systemImage: task.isCompleted ? "xmark.circle" : "checkmark.circle")
+                                        }
+                                        .tint(task.isCompleted ?
+                                              Color(uiColor: UIColor(gradient: [.systemRed, .systemPink])) :
+                                              Color(uiColor: UIColor(gradient: [.systemGreen, .systemMint])))
+                                    }
+                                    .onTapGesture {
+                                        if !isEditMode {
+                                            selectedTask = task
+                                        }
+                                    }
+                            }
+                            .onMove(perform: moveItems)
+                            .listRowSeparator(.hidden)
                         }
-                        .onMove(perform: moveItems) // Add this modifier
-                        .listRowSeparator(.hidden)
+                        .padding(.top, 15)
+                        .listStyle(.plain)
+                        .background(LinearGradient(gradient: Gradient(colors: [Color.blue.opacity(0.1), Color.purple.opacity(0.1)]),
+                                                   startPoint: .topLeading,
+                                                   endPoint: .bottomTrailing))
+                        .environment(\.editMode, .constant(reorderingTasks ? EditMode.active : EditMode.inactive))
                     }
-                    .padding(.top, 15)
-                    .listStyle(.plain)
-                    .background( LinearGradient(gradient: Gradient(colors: [Color.blue.opacity(0.1), Color.purple.opacity(0.1)]),
-                                                startPoint: .topLeading,
-                                                endPoint: .bottomTrailing))
-                    .environment(\.editMode, .constant(reorderingTasks ? EditMode.active : EditMode.inactive))
-
                 }
-                
-                // Update Add Task Button with gradient
+
+                // Add Task Button
                 AddTaskButton(showingAddTask: $showingAddTask)
             }
             .sheet(isPresented: $showingAddTask, onDismiss: {
-                            if isEditMode {
-                                isEditMode = false
-                                selectedTask = nil
-                            }
-                        }) {
-                            if let task = selectedTask {
-                                AddEditTaskView(task: task)
-                            } else {
-                                AddEditTaskView(task: nil)
-                            }
-                        }
-                        .navigationDestination(isPresented: Binding(
-                            get: { selectedTask != nil && !isEditMode },
-                            set: { if !$0 { selectedTask = nil } }
-                        )) {
-                            if let task = selectedTask {
-                                TaskDetailView(task: task)
-                            }
-                        }
+                if isEditMode {
+                    isEditMode = false
+                    selectedTask = nil
+                }
+            }) {
+                if let task = selectedTask {
+                    AddEditTaskView(task: task)
+                } else {
+                    AddEditTaskView(task: nil)
+                }
+            }
+            .navigationDestination(isPresented: Binding(
+                get: { selectedTask != nil && !isEditMode },
+                set: { if !$0 { selectedTask = nil } }
+            )) {
+                if let task = selectedTask {
+                    TaskDetailView(task: task)
+                }
+            }
         }
     }
+
     
     // Add this function to ContentView
     private func moveItems(from source: IndexSet, to destination: Int) {
@@ -292,6 +295,17 @@ struct ContentView: View {
             } catch {
                 print("Failed to update task: \(error.localizedDescription)")
             }
+        }
+    }
+    
+    private func getEmptyStateMessage() -> String {
+        switch selectedFilter {
+        case .all:
+            return "You haven't created any tasks yet.\nTap the button below to get started!"
+        case .pending:
+            return "No pending tasks!\nYou're all caught up."
+        case .completed:
+            return "No completed tasks yet.\nComplete some tasks to see them here!"
         }
     }
 }
@@ -458,5 +472,36 @@ extension UIColor {
         UIGraphicsEndImageContext()
         
         self.init(patternImage: gradientImage!)
+    }
+}
+
+
+
+struct EmptyStateView: View {
+    let message: String
+    @Binding var showingAddTask: Bool
+    
+    var body: some View {
+        VStack(spacing: 20) {
+            Image(systemName: "tray.fill")
+                .resizable()
+                .scaledToFit()
+                .frame(width: 80, height: 80)
+                .foregroundColor(.gray.opacity(0.5))
+
+            Text(message)
+                .font(.headline)
+                .multilineTextAlignment(.center)
+                .foregroundColor(.gray)
+                .padding(.horizontal, 20)
+
+        }
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .background {
+            LinearGradient(gradient: Gradient(colors: [Color.blue.opacity(0.1), Color.purple.opacity(0.1)]),
+                          startPoint: .topLeading,
+                          endPoint: .bottomTrailing)
+        }
+        .ignoresSafeArea()
     }
 }
