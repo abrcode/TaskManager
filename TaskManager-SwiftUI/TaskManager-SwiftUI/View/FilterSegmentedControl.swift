@@ -2,7 +2,12 @@ import SwiftUI
 
 struct FilterSegmentedControl: View {
     @Binding var selectedFilter: TaskFilter
+    @Environment(\.colorScheme) private var colorScheme  
     var animation: Namespace.ID
+    
+    private var capsuleGradient: LinearGradient {
+        GradientUtility.buttonGradient(for: colorScheme)
+    }
     
     var body: some View {
         HStack(spacing: 10) {
@@ -10,13 +15,15 @@ struct FilterSegmentedControl: View {
                 Text(filter.rawValue)
                     .font(.callout)
                     .fontWeight(.semibold)
-                    .foregroundColor(selectedFilter == filter ? .white : .primary)
+                    .foregroundColor(selectedFilter == filter ? 
+                        .white : 
+                        (colorScheme == .dark ? .white : .primary))
                     .padding(.vertical, 8)
                     .frame(maxWidth: .infinity)
                     .background {
                         if selectedFilter == filter {
                             Capsule()
-                                .fill(GradientUtility.buttonGradient)
+                                .fill(capsuleGradient)  
                                 .matchedGeometryEffect(id: "FILTER", in: animation)
                         }
                     }
@@ -28,8 +35,6 @@ struct FilterSegmentedControl: View {
             }
         }
         .padding(3)
-        .background(
-            .clear
-        )
+        .background(.clear)
     }
 }

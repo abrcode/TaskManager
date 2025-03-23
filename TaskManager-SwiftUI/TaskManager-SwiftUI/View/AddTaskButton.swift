@@ -2,6 +2,7 @@ import SwiftUI
 
 struct AddTaskButton: View {
     @Binding var showingAddTask: Bool
+    @Environment(\.colorScheme) private var colorScheme
     
     var body: some View {
         VStack {
@@ -14,7 +15,7 @@ struct AddTaskButton: View {
                         .fontWeight(.semibold)
                         .foregroundColor(.white)
                         .frame(width: 56, height: 56)
-                        .background(GradientUtility.buttonGradient)
+                        .background(GradientUtility.buttonGradient(for: colorScheme))
                         .clipShape(Circle())
                         .shadow(color: Color.blue.opacity(0.3), radius: 10, x: 0, y: 5)
                 }
@@ -24,4 +25,3 @@ struct AddTaskButton: View {
         }
     }
 }
-

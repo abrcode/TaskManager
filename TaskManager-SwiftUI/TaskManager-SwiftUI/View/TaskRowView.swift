@@ -9,6 +9,7 @@ import SwiftUI
 
 struct TaskRow: View {
     @ObservedObject var task: Task
+    @Environment(\.colorScheme) private var colorScheme
     
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
@@ -17,7 +18,7 @@ struct TaskRow: View {
                 .font(.title3)
                 .fontWeight(.medium)
                 .lineLimit(1)
-                .foregroundColor(.primary)
+                .foregroundColor(colorScheme == .dark ? .white : .primary)
                 .strikethrough(task.isCompleted)
                 .padding(.bottom, 2)
             
@@ -25,7 +26,7 @@ struct TaskRow: View {
             if let description = task.taskDescription, !description.isEmpty {
                 Text(description)
                     .font(.subheadline)
-                    .foregroundColor(.secondary)
+                    .foregroundColor(colorScheme == .dark ? .white.opacity(0.7) : .secondary)
                     .lineLimit(1)
                     .strikethrough(task.isCompleted)
                     .padding(.bottom, 2)
@@ -39,7 +40,7 @@ struct TaskRow: View {
                     .padding(.horizontal, 10)
                     .padding(.vertical, 4)
                     .background(priorityColor(for: task.taskPriority).opacity(0.15))
-                    .foregroundColor(priorityColor(for: task.taskPriority))
+                    .foregroundColor(colorScheme == .dark ? .white : priorityColor(for: task.taskPriority))
                     .clipShape(Capsule())
                 
                 Spacer()
@@ -51,13 +52,13 @@ struct TaskRow: View {
                     Text(task.taskDueDate?.formatted(date: .numeric, time: .omitted) ?? "No date")
                         .font(.caption)
                 }
-                .foregroundColor(.gray)
+                .foregroundColor(colorScheme == .dark ? .white.opacity(0.7) : .gray)
             }
         }
         .padding(12)
-        .background(Color.white)
+        .background(colorScheme == .dark ? Color(UIColor.systemGray6) : .white)
         .clipShape(RoundedRectangle(cornerRadius: 12))
-        .shadow(color: Color.black.opacity(0.09), radius: 8, x: 0, y: 2)
+        .shadow(color: (colorScheme == .dark ? Color.white : Color.black).opacity(0.09), radius: 8, x: 0, y: 2)
         .padding(.horizontal, 2)
         .padding(.vertical, 2)
         .opacity(task.isCompleted ? 0.6 : 1.0)

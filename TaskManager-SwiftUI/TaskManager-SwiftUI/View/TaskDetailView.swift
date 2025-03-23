@@ -5,20 +5,15 @@
 //  Created by Aniket Rao on 21/03/25.
 //
 
-//
-//  TaskDetailView.swift
-//  TaskManager-SwiftUI
-//
-//  Created by Aniket Rao on 21/03/25.
-//
-
 import SwiftUI
 
 struct TaskDetailView: View {
     @ObservedObject var task: Task
     @Environment(\.managedObjectContext) private var viewContext
+    @Environment(\.colorScheme) private var colorScheme
     
     var body: some View {
+        
         ScrollView {
             VStack(spacing: 20) {
                 // Header Card
@@ -33,30 +28,32 @@ struct TaskDetailView: View {
                     
                     Text("Due " + formattedDate(task.taskDueDate))
                         .font(.subheadline)
-                        .foregroundColor(.gray)
+                        .foregroundColor(colorScheme == .dark ? .white : .gray)
                 }
                 .padding()
-                .background(Color(UIColor.systemBackground))
+                .background(colorScheme == .dark ? Color(UIColor.systemGray6) : Color(UIColor.systemBackground))
                 .cornerRadius(15)
-                .shadow(color: Color.black.opacity(0.09), radius: 8, x: 0, y: 2)
+                .shadow(color: (colorScheme == .dark ? Color.white : Color.black).opacity(0.09),
+                        radius: 8, x: 0, y: 2)
                 
                 // Description Card
                 if let description = task.taskDescription, !description.isEmpty {
                     VStack(alignment: .leading, spacing: 12) {
                         Text("Description")
                             .font(.headline)
+                            .foregroundColor(colorScheme == .dark ? .white : .primary)
                         
                         Text(description)
                             .font(.body)
-                            .foregroundColor(.secondary)
+                            .foregroundColor(colorScheme == .dark ? .white.opacity(0.7) : .secondary)
                     }
                     .frame(maxWidth: .infinity, alignment: .leading)
                     .padding()
-                    .background(Color(UIColor.systemBackground))
+                    .background(colorScheme == .dark ? Color(UIColor.systemGray6) : Color(UIColor.systemBackground))
                     .cornerRadius(15)
-                    .shadow(color: Color.black.opacity(0.09), radius: 8, x: 0, y: 2)
+                    .shadow(color: (colorScheme == .dark ? Color.white : Color.black).opacity(0.09),
+                            radius: 8, x: 0, y: 2)
                 }
-            
                 
                 // Action Button
                 Button(action: { toggleCompletion() }) {
@@ -74,7 +71,7 @@ struct TaskDetailView: View {
                         startPoint: .leading,
                         endPoint: .trailing)
                     )
-                    .foregroundColor(.white)
+                    .foregroundColor(colorScheme == .dark ? .white : .white)
                     .cornerRadius(15)
                     .shadow(color: (task.isCompleted ? Color.red : Color.green).opacity(0.3),
                             radius: 8, x: 0, y: 4)
@@ -83,9 +80,8 @@ struct TaskDetailView: View {
             }
             .padding()
         }
-        .background( LinearGradient(gradient: Gradient(colors: [Color.blue.opacity(0.1), Color.purple.opacity(0.1)]),
-                                    startPoint: .topLeading,
-                                    endPoint: .bottomTrailing))
+        .background(GradientUtility.defaultGradient(for: colorScheme)
+            .ignoresSafeArea())
         .navigationTitle("Task Details")
         .navigationBarTitleDisplayMode(.inline)
     }
@@ -111,17 +107,18 @@ struct TaskDetailView: View {
     }
     
     // Helper function for priority strings
-        private func priorityString(for priority: Int16) -> String {
-            switch priority {
-            case 2: return "High"
-            case 1: return "Medium"
-            default: return "Low"
-            }
+    private func priorityString(for priority: Int16) -> String {
+        switch priority {
+        case 2: return "High"
+        case 1: return "Medium"
+        default: return "Low"
         }
+    }
 }
 
 // Add this helper view for priority badge
 struct PriorityBadge: View {
+    @Environment(\.colorScheme) private var colorScheme
     let priority: String
     
     var backgroundColor: Color {
@@ -147,12 +144,11 @@ struct PriorityBadge: View {
             .padding(.horizontal, 10)
             .padding(.vertical, 4)
             .background(backgroundColor)
-            .foregroundColor(textColor)
+            .foregroundColor(colorScheme == .dark ? .white : textColor)
             .clipShape(Capsule())
     }
 }
 
-// Preview remains the same
 
 #Preview {
     let context = PersistenceController.preview.container.viewContext
