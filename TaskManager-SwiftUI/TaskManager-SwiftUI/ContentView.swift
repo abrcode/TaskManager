@@ -5,7 +5,7 @@
 //  Created by Aniket Rao on 20/03/25.
 //
 
-iimport SwiftUI
+import SwiftUI
 import CoreData
 
 struct ContentView: View {
