@@ -29,8 +29,7 @@ struct FilterSegmentedControl: View {
         }
         .padding(3)
         .background(
-            RoundedRectangle(cornerRadius: 20)
-                .fill(GradientUtility.defaultGradient)
+            .clear
         )
     }
 }
