@@ -10,6 +10,7 @@ import CoreData
 
 struct ContentView: View {
     @Environment(\.managedObjectContext) private var viewContext
+    @Environment(\.colorScheme) private var colorScheme
     
     // State variables
     @State private var sortOption: SortOption = .dueDate
@@ -40,7 +41,7 @@ struct ContentView: View {
         NavigationStack {
             ZStack {
                 // Background gradient
-                GradientUtility.defaultGradient.ignoresSafeArea()
+                GradientUtility.defaultGradient(for: colorScheme).ignoresSafeArea()
                 
                 VStack(spacing: 0) {
                     // Header section
@@ -56,17 +57,18 @@ struct ContentView: View {
                             }
                         }
                         .padding(.horizontal)
+                        
                         SortIndicator(sortOption: sortOption, sortAscending: sortAscending)
                             .padding(.horizontal)
                     }
                     .padding(.vertical, 10)
-                    .background( GradientUtility.defaultGradient)
+                    .background(GradientUtility.defaultGradient(for: colorScheme))
                     
                     Divider()
                         .frame(height: 1.5)
                         .overlay(Color.gray.opacity(0.3))
                         .padding(.vertical, 8)
-                        .background(GradientUtility.defaultGradient)
+                        .background(GradientUtility.defaultGradient(for: colorScheme))
                     
                     // Task List with Empty State
                     if filteredTasks.isEmpty {
@@ -75,7 +77,7 @@ struct ContentView: View {
                         taskListView
                     }
                 }
-                .background( GradientUtility.defaultGradient)
+                .background(GradientUtility.defaultGradient(for: colorScheme))
                 
                 AddTaskButton(showingAddTask: $showingAddTask)
             }
@@ -91,7 +93,6 @@ struct ContentView: View {
                 }
             }
         }
-        .background(GradientUtility.defaultGradient)
     }
     
     // MARK: - Task List View
@@ -119,7 +120,7 @@ struct ContentView: View {
         }
         .scrollContentBackground(.hidden)
         .listStyle(.plain)
-        .background(GradientUtility.defaultGradient)
+        .background(GradientUtility.defaultGradient(for: colorScheme))
         .environment(\.editMode, .constant(reorderingTasks ? .active : .inactive))
     }
     

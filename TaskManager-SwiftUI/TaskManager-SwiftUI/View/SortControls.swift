@@ -4,6 +4,7 @@ struct SortMenuButton: View {
     @Binding var sortOption: SortOption
     @Binding var sortAscending: Bool
     var onSort: () -> Void
+    @Environment(\.colorScheme) private var colorScheme
     
     var body: some View {
         Menu {
@@ -28,9 +29,9 @@ struct SortMenuButton: View {
         } label: {
             Image(systemName: "line.3.horizontal.decrease.circle")
                 .font(.title3)
-                .foregroundColor(.blue)
+                .foregroundColor(colorScheme == .dark ? .white : .blue)
                 .frame(width: 45, height: 45)
-                .background(Color.blue.opacity(0.1))
+                .background(colorScheme == .dark ? Color.white.opacity(0.2) : Color.blue.opacity(0.1))
                 .clipShape(Circle())
         }
     }
@@ -51,4 +52,3 @@ struct SortIndicator: View {
         }
     }
 }
-

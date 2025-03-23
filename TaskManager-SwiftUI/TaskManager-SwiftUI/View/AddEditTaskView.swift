@@ -10,13 +10,14 @@ import SwiftUI
 // First, let's add a Snackbar view component
 struct Snackbar: View {
     let message: String
+    @Environment(\.colorScheme) private var colorScheme
     
     var body: some View {
         Text(message)
             .foregroundColor(.white)
             .padding(.horizontal, 16)
             .padding(.vertical, 10)
-            .background(Color.black.opacity(0.8))
+            .background(colorScheme == .dark ? Color.white.opacity(0.2) : Color.black.opacity(0.8))
             .cornerRadius(8)
             .shadow(radius: 4)
     }
@@ -26,6 +27,7 @@ struct AddEditTaskView: View {
     @EnvironmentObject var taskModel: TaskViewModel
     @Environment(\.dismiss) var dismiss
     @Environment(\.managedObjectContext) var viewContext
+    @Environment(\.colorScheme) private var colorScheme
     
     @State private var title: String = ""
     @State private var description: String = ""
@@ -102,10 +104,8 @@ struct AddEditTaskView: View {
     
     var body: some View {
         ZStack {
-            // Background gradient
-            LinearGradient(gradient: Gradient(colors: [Color.blue.opacity(0.1), Color.purple.opacity(0.1)]),
-                          startPoint: .topLeading,
-                          endPoint: .bottomTrailing)
+            // Update background gradient
+            GradientUtility.defaultGradient(for: colorScheme)
                 .ignoresSafeArea()
             
             VStack(spacing: 0) {
@@ -113,34 +113,35 @@ struct AddEditTaskView: View {
                 VStack(spacing: 10) {
                     Text(navigationTitle)
                         .font(.system(size: 28, weight: .bold))
-                        .foregroundColor(.primary)
+                        .foregroundColor(colorScheme == .dark ? .white : .primary)
                     
                     Text("Fill in the details below")
                         .font(.subheadline)
-                        .foregroundColor(.secondary)
+                        .foregroundColor(colorScheme == .dark ? .white : .secondary)
                 }
                 .frame(maxWidth: .infinity)
                 .padding(.top, 20)
                 .padding(.bottom, 10)
-                .background(Color(UIColor.systemBackground).opacity(0.8))
+                .background(colorScheme == .dark ? Color(UIColor.systemGray6) : Color(UIColor.systemBackground).opacity(0.8))
                 
                 ScrollView {
                     VStack(spacing: 25) {
-                        // Title Field with icon
+                        // Update all card backgrounds
                         HStack(spacing: 15) {
                             Image(systemName: "pencil.circle.fill")
                                 .font(.title2)
                                 .foregroundColor(.blue)
                             
                             TextField("Task Title", text: $title)
-                                .textFieldStyle(PlainTextFieldStyle())
+                                .textFieldStyle(.plain)
+                                .colorScheme(colorScheme)
                         }
                         .padding()
-                        .background(Color(UIColor.systemBackground))
+                        .background(colorScheme == .dark ? Color(UIColor.systemGray6) : Color(UIColor.systemBackground))
                         .cornerRadius(15)
-                        .shadow(color: Color.black.opacity(0.05), radius: 5, x: 0, y: 2)
+                        .shadow(color: (colorScheme == .dark ? Color.white : Color.black).opacity(0.05), radius: 5, x: 0, y: 2)
                         
-                        // Description Field with icon
+                        // Update Description card background
                         VStack(alignment: .leading, spacing: 10) {
                             HStack {
                                 Image(systemName: "text.alignleft")
@@ -148,23 +149,25 @@ struct AddEditTaskView: View {
                                     .foregroundColor(.purple)
                                 Text("Description")
                                     .font(.headline)
+                                    .foregroundColor(colorScheme == .dark ? .white : .primary)
                             }
                             
                             TextEditor(text: $description)
                                 .frame(height: 100)
                                 .padding(10)
-                                .background(Color(UIColor.systemBackground))
+                                .background(colorScheme == .dark ? Color(UIColor.systemGray6) : Color(UIColor.systemBackground))
                                 .cornerRadius(15)
                         }
                         .padding()
-                        .background(Color(UIColor.systemBackground))
+                        .background(colorScheme == .dark ? Color(UIColor.systemGray6) : Color(UIColor.systemBackground))
                         .cornerRadius(15)
-                        .shadow(color: Color.black.opacity(0.05), radius: 5, x: 0, y: 2)
+                        .shadow(color: (colorScheme == .dark ? Color.white : Color.black).opacity(0.05), radius: 5, x: 0, y: 2)
                         
-                        // Priority Selection with animated background
+                        // Update Priority Selection background
                         VStack(alignment: .leading, spacing: 10) {
                             Text("Priority Level")
                                 .font(.headline)
+                                .foregroundColor(colorScheme == .dark ? .white : .primary)
                             
                             HStack(spacing: 12) {
                                 ForEach(priorities, id: \.self) { p in
@@ -178,11 +181,11 @@ struct AddEditTaskView: View {
                             }
                         }
                         .padding()
-                        .background(Color(UIColor.systemBackground))
+                        .background(colorScheme == .dark ? Color(UIColor.systemGray6) : Color(UIColor.systemBackground))
                         .cornerRadius(15)
-                        .shadow(color: Color.black.opacity(0.05), radius: 5, x: 0, y: 2)
+                        .shadow(color: (colorScheme == .dark ? Color.white : Color.black).opacity(0.05), radius: 5, x: 0, y: 2)
                         
-                        // Date Picker with icon
+                        // Update Date Picker background
                         VStack(alignment: .leading, spacing: 10) {
                             HStack {
                                 Image(systemName: "calendar")
@@ -190,6 +193,7 @@ struct AddEditTaskView: View {
                                     .foregroundColor(.green)
                                 Text("Due Date")
                                     .font(.headline)
+                                    .foregroundColor(colorScheme == .dark ? .white : .primary)
                             }
                             
                             DatePicker(
@@ -201,9 +205,9 @@ struct AddEditTaskView: View {
                             .accentColor(.blue)
                         }
                         .padding()
-                        .background(Color(UIColor.systemBackground))
+                        .background(colorScheme == .dark ? Color(UIColor.systemGray6) : Color(UIColor.systemBackground))
                         .cornerRadius(15)
-                        .shadow(color: Color.black.opacity(0.05), radius: 5, x: 0, y: 2)
+                        .shadow(color: (colorScheme == .dark ? Color.white : Color.black).opacity(0.05), radius: 5, x: 0, y: 2)
                     }
                     .padding()
                 }
@@ -217,11 +221,10 @@ struct AddEditTaskView: View {
                     }
                 } label: {
                     HStack {
-                        Image(systemName: "checkmark.circle.fill")
                         Text("Save Task")
                             .fontWeight(.semibold)
+                            .foregroundColor(colorScheme == .dark ? .white : .primary)
                     }
-                    .foregroundColor(.white)
                     .frame(maxWidth: .infinity)
                     .padding(.vertical, 16)
                     .background(
@@ -243,7 +246,7 @@ struct AddEditTaskView: View {
                     } label: {
                         Image(systemName: "xmark.circle.fill")
                             .font(.title2)
-                            .foregroundColor(.gray)
+                            .foregroundColor(colorScheme == .dark ? .white : .gray)
                     }
                     .padding(16)
                     

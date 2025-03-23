@@ -1,6 +1,7 @@
 import SwiftUI
 
 struct EmptyStateView: View {
+    @Environment(\.colorScheme) private var colorScheme
     let message: String
     @Binding var showingAddTask: Bool
     
@@ -16,10 +17,10 @@ struct EmptyStateView: View {
             Text(message)
                 .font(.title3)
                 .fontWeight(.medium)
-                .foregroundColor(.secondary)
+                .foregroundColor(colorScheme == .dark ? .white.opacity(0.8) : .gray)
                 .multilineTextAlignment(.center)
                 .padding(.horizontal, 40)
-//            
+//
 //            // Create task button with gradient
 //            Button {
 //                showingAddTask = true
@@ -39,8 +40,6 @@ struct EmptyStateView: View {
         }
         .padding()
         .frame(maxWidth: .infinity, maxHeight: .infinity)
-        .background(GradientUtility.defaultGradient)
+        .background(GradientUtility.defaultGradient(for: colorScheme))
     }
 }
-
-// End of file. No additional code.

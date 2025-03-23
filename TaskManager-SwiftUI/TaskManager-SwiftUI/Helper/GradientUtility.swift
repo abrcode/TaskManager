@@ -1,17 +1,23 @@
 import SwiftUI
 
 struct GradientUtility {
-    static let defaultGradient = LinearGradient(
-        gradient: Gradient(colors: [.blue.opacity(0.1), .purple.opacity(0.1)]),
-        startPoint: .topLeading,
-        endPoint: .bottomTrailing
-    )
+    // Update defaultGradient to use environment
+    static func defaultGradient(for colorScheme: ColorScheme) -> LinearGradient {
+        LinearGradient(
+            gradient: Gradient(colors: ThemeManager.Colors.gradientBackground(for: colorScheme)),
+            startPoint: .topLeading,
+            endPoint: .bottomTrailing
+        )
+    }
     
-    static let buttonGradient = LinearGradient(
-        gradient: Gradient(colors: [.blue, .purple]),
-        startPoint: .leading,
-        endPoint: .trailing
-    )
+    // Update buttonGradient to use environment
+    static func buttonGradient(for colorScheme: ColorScheme) -> LinearGradient {
+        LinearGradient(
+            gradient: Gradient(colors: ThemeManager.Colors.buttonGradient(for: colorScheme)),
+            startPoint: .leading,
+            endPoint: .trailing
+        )
+    }
 }
 
 extension UIColor {
@@ -34,4 +40,3 @@ extension UIColor {
         self.init(patternImage: gradientImage!)
     }
 }
-
