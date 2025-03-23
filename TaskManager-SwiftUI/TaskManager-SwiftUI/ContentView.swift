@@ -56,17 +56,17 @@ struct ContentView: View {
                             }
                         }
                         .padding(.horizontal)
-                        
                         SortIndicator(sortOption: sortOption, sortAscending: sortAscending)
                             .padding(.horizontal)
                     }
-                    .background( GradientUtility.defaultGradient)
                     .padding(.vertical, 10)
+                    .background( GradientUtility.defaultGradient)
                     
                     Divider()
                         .frame(height: 1.5)
                         .overlay(Color.gray.opacity(0.3))
                         .padding(.vertical, 8)
+                        .background(GradientUtility.defaultGradient)
                     
                     // Task List with Empty State
                     if filteredTasks.isEmpty {
@@ -91,6 +91,7 @@ struct ContentView: View {
                 }
             }
         }
+        .background(GradientUtility.defaultGradient)
     }
     
     // MARK: - Task List View

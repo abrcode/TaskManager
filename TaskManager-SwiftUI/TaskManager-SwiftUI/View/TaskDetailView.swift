@@ -56,27 +56,7 @@ struct TaskDetailView: View {
                     .cornerRadius(15)
                     .shadow(color: Color.black.opacity(0.09), radius: 8, x: 0, y: 2)
                 }
-                
-                // Status Card
-//                VStack(alignment: .leading, spacing: 12) {
-//                    Text("Status")
-//                        .font(.headline)
-//
-//                    HStack {
-//                        Image(systemName: task.isCompleted ? "checkmark.circle.fill" : "circle")
-//                            .foregroundColor(task.isCompleted ? .green : .gray)
-//                            .font(.title2)
-//
-//                        Text(task.isCompleted ? "Completed" : "In Progress")
-//                            .font(.body)
-//                            .foregroundColor(.secondary)
-//                    }
-//                }
-//                .frame(maxWidth: .infinity, alignment: .leading)
-//                .padding()
-//                .background(Color(UIColor.systemBackground))
-//                .cornerRadius(15)
-//                .shadow(radius: 5)
+            
                 
                 // Action Button
                 Button(action: { toggleCompletion() }) {

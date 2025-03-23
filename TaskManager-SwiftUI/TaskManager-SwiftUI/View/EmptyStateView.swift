@@ -19,23 +19,23 @@ struct EmptyStateView: View {
                 .foregroundColor(.secondary)
                 .multilineTextAlignment(.center)
                 .padding(.horizontal, 40)
-            
-            // Create task button with gradient
-            Button {
-                showingAddTask = true
-            } label: {
-                HStack(spacing: 8) {
-                    Image(systemName: "plus.circle.fill")
-                    Text("Create New Task")
-                }
-                .font(.headline)
-                .foregroundColor(.white)
-                .padding(.horizontal, 20)
-                .padding(.vertical, 12)
-                .background(GradientUtility.buttonGradient)
-                .cornerRadius(25)
-            }
-            .shadow(color: Color.blue.opacity(0.3), radius: 5, x: 0, y: 2)
+//            
+//            // Create task button with gradient
+//            Button {
+//                showingAddTask = true
+//            } label: {
+//                HStack(spacing: 8) {
+//                    Image(systemName: "plus.circle.fill")
+//                    Text("Create New Task")
+//                }
+//                .font(.headline)
+//                .foregroundColor(.white)
+//                .padding(.horizontal, 20)
+//                .padding(.vertical, 12)
+//                .background(GradientUtility.buttonGradient)
+//                .cornerRadius(25)
+//            }
+//            .shadow(color: Color.blue.opacity(0.3), radius: 5, x: 0, y: 2)
         }
         .padding()
         .frame(maxWidth: .infinity, maxHeight: .infinity)
