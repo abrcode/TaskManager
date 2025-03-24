@@ -40,4 +40,8 @@ struct PersistenceController {
         })
         container.viewContext.automaticallyMergesChangesFromParent = true
     }
+    
+    func backgroundContext() -> NSManagedObjectContext {
+        return container.newBackgroundContext()
+    }
 }

@@ -11,7 +11,9 @@ struct TaskDetailView: View {
     @ObservedObject var task: Task
     @Environment(\.managedObjectContext) private var viewContext
     @Environment(\.colorScheme) private var colorScheme
-    
+    @Environment(\.dismiss) private var dismiss
+    @StateObject private var taskViewModel = TaskViewModel()
+
     var body: some View {
         
         ScrollView {
@@ -55,26 +57,52 @@ struct TaskDetailView: View {
                             radius: 8, x: 0, y: 2)
                 }
                 
-                // Action Button
-                Button(action: { toggleCompletion() }) {
-                    HStack {
-                        Image(systemName: task.isCompleted ? "xmark.circle" : "checkmark.circle")
-                        Text(task.isCompleted ? "Mark as Incomplete" : "Mark as Completed")
+                // Action Buttons
+                VStack(spacing: 15) {
+                    Button(action: { toggleCompletion() }) {
+                        HStack {
+                            Image(systemName: task.isCompleted ? "xmark.circle" : "checkmark.circle")
+                            Text(task.isCompleted ? "Mark as Incomplete" : "Mark as Completed")
+                        }
+                        .frame(maxWidth: .infinity)
+                        .padding()
+                        .background(
+                            LinearGradient(gradient: Gradient(colors: [
+                                task.isCompleted ? .red : .green,
+                                task.isCompleted ? .pink : .mint
+                            ]),
+                            startPoint: .leading,
+                            endPoint: .trailing)
+                        )
+                        .foregroundColor(colorScheme == .dark ? .white : .white)
+                        .cornerRadius(15)
+                        .shadow(color: (task.isCompleted ? Color.red : Color.green).opacity(0.3),
+                                radius: 8, x: 0, y: 4)
                     }
-                    .frame(maxWidth: .infinity)
-                    .padding()
-                    .background(
-                        LinearGradient(gradient: Gradient(colors: [
-                            task.isCompleted ? .red : .green,
-                            task.isCompleted ? .pink : .mint
-                        ]),
-                        startPoint: .leading,
-                        endPoint: .trailing)
-                    )
-                    .foregroundColor(colorScheme == .dark ? .white : .white)
-                    .cornerRadius(15)
-                    .shadow(color: (task.isCompleted ? Color.red : Color.green).opacity(0.3),
-                            radius: 8, x: 0, y: 4)
+                    
+                    Button(action: {
+                        taskViewModel.deleteTask(task, context: viewContext)
+                        dismiss()
+                    }) {
+                        HStack {
+                            Image(systemName: "trash")
+                            Text("Delete Task")
+                        }
+                        .frame(maxWidth: .infinity)
+                        .padding()
+                        .background(
+                            LinearGradient(gradient: Gradient(colors: [
+                                .red,
+                                .orange
+                            ]),
+                            startPoint: .leading,
+                            endPoint: .trailing)
+                        )
+                        .foregroundColor(.white)
+                        .cornerRadius(15)
+                        .shadow(color: Color.red.opacity(0.3),
+                                radius: 8, x: 0, y: 4)
+                    }
                 }
                 .padding(.top)
             }

@@ -60,6 +60,14 @@ class TaskViewModel : ObservableObject {
         }
     }
     
+    // Add this new function for deleting tasks
+    func deleteTask(_ task: Task, context: NSManagedObjectContext) {
+        context.delete(task)
+        
+        if let _ = try? context.save() {
+            print("Task deleted successfully")
+        }
+    }
     
     // MARK: - Restting Data
     func resetTaskData(){
