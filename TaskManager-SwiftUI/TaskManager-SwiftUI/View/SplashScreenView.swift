@@ -13,16 +13,19 @@ struct SplashScreenView: View {
     
     var body: some View {
         ZStack {
-            LinearGradient(
-                gradient: Gradient(colors: [.blue.opacity(0.8), .purple.opacity(0.8)]),
-                startPoint: .topLeading,
-                endPoint: .bottomTrailing
-            )
-            .ignoresSafeArea()
+            // Make sure ContentView is ready before showing it
+            ContentView()
+                .opacity(isActive ? 1 : 0)
             
-            if isActive {
-                ContentView()
-            } else {
+            // Splash screen overlay
+            ZStack {
+                LinearGradient(
+                    gradient: Gradient(colors: [.blue.opacity(0.8), .purple.opacity(0.8)]),
+                    startPoint: .topLeading,
+                    endPoint: .bottomTrailing
+                )
+                .ignoresSafeArea()
+                
                 VStack {
                     Image(systemName: "checkmark.circle.fill")
                         .font(.system(size: 80))
@@ -40,15 +43,14 @@ struct SplashScreenView: View {
                 }
                 .scaleEffect(size)
                 .opacity(opacity)
-                .onAppear {
-                    withAnimation(.easeIn(duration: 1.2)) {
-                        self.size = 1.0
-                        self.opacity = 1.0
-                    }
-                }
             }
+            .opacity(isActive ? 0 : 1)
         }
         .onAppear {
+            withAnimation(.easeIn(duration: 1.2)) {
+                self.size = 1.0
+                self.opacity = 1.0
+            }
             DispatchQueue.main.asyncAfter(deadline: .now() + 2.0) {
                 withAnimation {
                     self.isActive = true

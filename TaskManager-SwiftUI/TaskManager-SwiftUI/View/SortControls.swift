@@ -46,7 +46,8 @@ struct SortIndicator: View {
             Image(systemName: "arrow.up.arrow.down")
                 .foregroundColor(.secondary)
             Text("Sorted by: \(sortOption.rawValue) (\(sortAscending ? "ascending" : "descending"))")
-                .font(.caption)
+                .font(.system(size: 14))
+                .fontWeight(.semibold)
                 .foregroundColor(.secondary)
             Spacer()
         }
