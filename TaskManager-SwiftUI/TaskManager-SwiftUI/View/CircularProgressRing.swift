@@ -1,13 +1,14 @@
 import SwiftUI
 
 struct CircularProgressRing: View {
-    // Add colorScheme environment
     @Environment(\.colorScheme) private var colorScheme
     let progress: Double
     let size: CGFloat
     
-    private var ringColor: Color {
-        colorScheme == .dark ? .white : .blue
+    private var gradientColors: [Color] {
+        colorScheme == .dark ? 
+            [.purple.opacity(0.8), .blue.opacity(0.8)] : 
+            [.blue, .purple]
     }
     
     var body: some View {
@@ -20,10 +21,14 @@ struct CircularProgressRing: View {
             
             Circle()
                 .trim(from: 0, to: progress)
-                .stroke(ringColor, style: StrokeStyle(
-                    lineWidth: 4,
-                    lineCap: .round
-                ))
+                .stroke(
+                    LinearGradient(
+                        gradient: Gradient(colors: gradientColors),
+                        startPoint: .leading,
+                        endPoint: .trailing
+                    ),
+                    style: StrokeStyle(lineWidth: 4, lineCap: .round)
+                )
                 .rotationEffect(.degrees(-90))
             
             Text("\(Int(progress * 100))%")
